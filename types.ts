@@ -1,12 +1,11 @@
-export type User = {
+
+export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Manager' | 'Rep' | 'Viewer';
-  team: string;
-};
+}
 
-export type Contact = {
+export interface Contact {
   id: string;
   firstName: string;
   lastName: string;
@@ -14,94 +13,76 @@ export type Contact = {
   email: string;
   phone: string;
   company: string;
-  website?: string;
   title: string;
-  source: 'Inbound' | 'Outbound' | 'Referral' | 'Ad' | 'Other';
+  source: 'Inbound' | 'Outbound' | 'Referral';
   status: 'New' | 'Active' | 'Inactive';
   ownerId: string;
   tags: string[];
   notes: string;
   createdAt: string;
   updatedAt: string;
-  lastActivityAt?: string;
-};
-
-export enum DealStage {
-  NewLead = 'ליד חדש',
-  Qualified = 'בחינה',
-  Discovery = 'גילוי',
-  ProposalSent = 'הצעה נשלחה',
-  Negotiation = 'משא ומתן',
-  ClosedWon = 'נסגר בהצלחה',
-  ClosedLost = 'נסגר בהפסד',
-  OnHold = 'בהקפאה',
 }
 
-export const DealStageOrder = [
-  DealStage.NewLead,
-  DealStage.Qualified,
-  DealStage.Discovery,
-  DealStage.ProposalSent,
+export enum DealStage {
+  Prospecting = 'Prospecting',
+  Qualification = 'Qualification',
+  NeedsAnalysis = 'Needs Analysis',
+  Proposal = 'Proposal',
+  Negotiation = 'Negotiation',
+  ClosedWon = 'Closed - Won',
+  ClosedLost = 'Closed - Lost',
+  OnHold = 'On Hold'
+}
+
+export const DealStageOrder: DealStage[] = [
+  DealStage.Prospecting,
+  DealStage.Qualification,
+  DealStage.NeedsAnalysis,
+  DealStage.Proposal,
   DealStage.Negotiation,
   DealStage.ClosedWon,
   DealStage.ClosedLost,
   DealStage.OnHold,
 ];
 
-
-export type Deal = {
+export interface Deal {
   id: string;
   name: string;
   company: string;
-  contactIds: string[];
   amount: number;
-  currency: 'ILS' | 'USD' | 'EUR';
+  currency: string;
+  stage: DealStage;
   probability: number;
   expectedCloseDate: string;
-  stage: DealStage;
-  pipeline: string;
-  source: 'Inbound' | 'Outbound' | 'Referral' | 'Ad' | 'Other';
   ownerId: string;
-  lastActivityAt: string;
-  nextAction: string;
+  contactIds: string[];
   priority: 'Low' | 'Medium' | 'High';
-  attachments: { name: string; url: string }[];
+  healthScore?: number;
   createdAt: string;
   updatedAt: string;
-  healthScore?: number;
-};
-
-export enum TaskStatus {
-  Open = 'פתוח',
-  InProgress = 'בתהליך',
-  Waiting = 'ממתין',
-  Done = 'הושלם',
 }
 
-export type Task = {
+export enum TaskStatus {
+  ToDo = 'To Do',
+  InProgress = 'In Progress',
+  Done = 'Done',
+  Archived = 'Archived',
+}
+
+export type TaskPriority = 'Low' | 'Medium' | 'High';
+
+export interface Task {
   id: string;
   title: string;
-  description: string;
-  relatedType: 'Deal' | 'Contact';
-  relatedId: string;
-  assigneeId: string;
   dueDate: string;
   status: TaskStatus;
-  priority: 'Low' | 'Medium' | 'High';
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type Activity = {
-  id: string;
+  priority: TaskPriority;
+  assigneeId: string;
   relatedType: 'Deal' | 'Contact';
   relatedId: string;
-  type: 'call' | 'email' | 'meeting' | 'note';
-  summary: string;
-  body: string;
-  direction: 'inbound' | 'outbound';
-  timestamp: string;
-  ownerId: string;
-};
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export type View = 'Contacts' | 'Deals' | 'Tasks' | 'Pipeline' | 'Reports' | 'Settings';
+export type View = 'pipeline' | 'deals' | 'tasks' | 'contacts' | 'reports' | 'inbox' | 'settings';

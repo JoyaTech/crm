@@ -1,89 +1,123 @@
 
-import { User, Contact, Deal, Task, DealStage, TaskStatus, Activity } from './types';
-import { v4 as uuidv4 } from 'uuid';
+import { User, Contact, Deal, Task, DealStage, TaskStatus } from './types';
 
 export const USERS: User[] = [
-  { id: 'user-1', name: 'אבי כהן', email: 'avi@example.com', role: 'Manager', team: 'Sales A' },
-  { id: 'user-2', name: 'יעל לוי', email: 'yael@example.com', role: 'Rep', team: 'Sales A' },
-  { id: 'user-3', name: 'משה ישראל', email: 'moshe@example.com', role: 'Rep', team: 'Sales B' },
-  { id: 'user-4', name: 'שרה שרון', email: 'sara@example.com', role: 'Admin', team: 'Management' },
+  { id: 'user-1', name: 'ישראל ישראלי', email: 'israel@example.com' },
+  { id: 'user-2', name: 'משה כהן', email: 'moshe@example.com' },
 ];
 
-export const CURRENT_USER_ID = 'user-2'; // Logged in as Yael Levi
+export const CONTACTS: Contact[] = [
+  {
+    id: 'contact-1',
+    firstName: 'דנה',
+    lastName: 'לוי',
+    fullName: 'דנה לוי',
+    email: 'dana.levi@techcorp.com',
+    phone: '050-1234567',
+    company: 'TechCorp',
+    title: 'מנהלת שיווק',
+    source: 'Inbound',
+    status: 'Active',
+    ownerId: 'user-1',
+    tags: ['VIP', 'Tel Aviv'],
+    notes: 'פגישה נקבעה לשבוע הבא.',
+    createdAt: '2023-01-15T09:00:00Z',
+    updatedAt: '2023-01-20T14:30:00Z',
+  },
+  {
+    id: 'contact-2',
+    firstName: 'אבי',
+    lastName: 'גולן',
+    fullName: 'אבי גולן',
+    email: 'avi.golan@innovate.io',
+    phone: '052-7654321',
+    company: 'Innovate.io',
+    title: 'מנכ"ל',
+    source: 'Referral',
+    status: 'New',
+    ownerId: 'user-2',
+    tags: ['Startup'],
+    notes: '',
+    createdAt: '2023-02-10T11:00:00Z',
+    updatedAt: '2023-02-10T11:00:00Z',
+  },
+];
 
-const now = new Date();
-const addDays = (date: Date, days: number) => {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result.toISOString();
-};
+export const DEALS: Deal[] = [
+  {
+    id: 'deal-1',
+    name: 'פרויקט CRM חדש',
+    company: 'TechCorp',
+    amount: 150000,
+    currency: 'ILS',
+    stage: DealStage.Proposal,
+    probability: 60,
+    expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerId: 'user-1',
+    contactIds: ['contact-1'],
+    priority: 'High',
+    healthScore: 85,
+    createdAt: '2023-02-01T10:00:00Z',
+    updatedAt: '2023-03-10T12:00:00Z',
+  },
+  {
+    id: 'deal-2',
+    name: 'שדרוג מערכת BI',
+    company: 'Innovate.io',
+    amount: 75000,
+    currency: 'ILS',
+    stage: DealStage.Qualification,
+    probability: 20,
+    expectedCloseDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerId: 'user-2',
+    contactIds: ['contact-2'],
+    priority: 'Medium',
+    healthScore: 60,
+    createdAt: '2023-02-20T15:00:00Z',
+    updatedAt: '2023-03-05T18:00:00Z',
+  },
+  {
+    id: 'deal-3',
+    name: 'רישיונות תוכנה שנתיים',
+    company: 'Global Solutions',
+    amount: 25000,
+    currency: 'ILS',
+    stage: DealStage.ClosedWon,
+    probability: 100,
+    expectedCloseDate: '2023-03-01T23:59:59Z',
+    ownerId: 'user-1',
+    contactIds: [],
+    priority: 'Low',
+    createdAt: '2023-01-10T10:00:00Z',
+    updatedAt: '2023-03-01T16:00:00Z',
+  },
+];
 
-export const CONTACTS: Contact[] = Array.from({ length: 25 }, (_, i) => {
-  const firstName = ['דני', 'יוסי', 'גדי', 'מיכל', 'רות', 'דנה', 'אורן'][i % 7];
-  const lastName = ['לוי', 'כהן', 'מזרחי', 'פרץ', 'ביטון', 'דהן', 'פרידמן'][i % 7];
-  return {
-    id: `contact-${i + 1}`,
-    firstName,
-    lastName,
-    fullName: `${firstName} ${lastName}`,
-    email: `contact${i+1}@company${i % 5}.com`,
-    phone: `+972-52-12345${i < 10 ? '0' : ''}${i}`,
-    company: `חברה ${String.fromCharCode(65 + (i % 5))}`,
-    title: ['מנכ"ל', 'סמנכ"ל שיווק', 'מנהל פיתוח', 'מנהל מוצר'][i % 4],
-    source: (['Inbound', 'Outbound', 'Referral', 'Ad'] as const)[i % 4],
-    status: (['New', 'Active', 'Inactive'] as const)[i % 3],
-    ownerId: USERS[i % 3].id,
-    tags: [['VIP', 'Qualified'][i%2]],
-    notes: 'פתק חשוב לגבי איש קשר זה.',
-    createdAt: addDays(now, -30-i),
-    updatedAt: addDays(now, -i),
-    lastActivityAt: addDays(now, -(i%5)),
-  };
-});
-
-export const DEALS: Deal[] = Array.from({ length: 18 }, (_, i) => ({
-  id: `deal-${i + 1}`,
-  name: `דיל עם חברה ${String.fromCharCode(65 + (i % 5))}`,
-  company: `חברה ${String.fromCharCode(65 + (i % 5))}`,
-  contactIds: [`contact-${i + 1}`],
-  amount: (i + 1) * 5000,
-  currency: 'ILS',
-  probability: [10, 20, 40, 60, 80, 100, 0, 5][i % 8],
-  expectedCloseDate: addDays(now, 30 + i * 5),
-  stage: Object.values(DealStage)[i % 8],
-  pipeline: 'Default Sales',
-  source: (['Inbound', 'Outbound', 'Referral', 'Ad'] as const)[i % 4],
-  ownerId: USERS[i % 3].id,
-  lastActivityAt: addDays(now, -i),
-  nextAction: 'שיחת מעקב',
-  priority: (['Low', 'Medium', 'High'] as const)[i % 3],
-  attachments: [],
-  createdAt: addDays(now, -20 - i),
-  updatedAt: addDays(now, -i),
-}));
-
-export const TASKS: Task[] = Array.from({ length: 40 }, (_, i) => ({
-    id: `task-${i + 1}`,
-    title: `משימה ${i + 1} עבור דיל ${i%18+1}`,
-    description: 'תיאור משימה.',
+export const TASKS: Task[] = [
+  {
+    id: 'task-1',
+    title: 'הכנת הצעת מחיר עבור TechCorp',
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    status: TaskStatus.InProgress,
+    priority: 'High',
+    assigneeId: 'user-1',
     relatedType: 'Deal',
-    relatedId: `deal-${i%18+1}`,
-    assigneeId: USERS[i % 3].id,
-    dueDate: addDays(now, i - 10), // Some will be overdue
-    status: Object.values(TaskStatus)[i % 4],
-    priority: (['Low', 'Medium', 'High'] as const)[i % 3],
-    createdAt: addDays(now, -15 - i),
-    updatedAt: addDays(now, -i),
-}));
-
-export const ACTIVITIES: Activity[] = Array.from({ length: 50 }, (_, i) => ({
-    id: `activity-${i + 1}`,
-    relatedType: i % 2 === 0 ? 'Deal' : 'Contact',
-    relatedId: i % 2 === 0 ? `deal-${(i/2)%18+1}` : `contact-${(i/2)%25+1}`,
-    type: (['call', 'email', 'meeting', 'note'] as const)[i % 4],
-    summary: `סיכום פעילות ${i + 1}`,
-    body: 'גוף הפעילות עם פרטים נוספים.',
-    direction: (['inbound', 'outbound'] as const)[i % 2],
-    timestamp: addDays(now, -i),
-    ownerId: USERS[i % 3].id,
-}));
+    relatedId: 'deal-1',
+    notes: 'יש לכלול את כל הפיצ\'רים שנדונו בפגישה האחרונה.',
+    createdAt: '2023-03-10T13:00:00Z',
+    updatedAt: '2023-03-11T09:00:00Z',
+  },
+  {
+    id: 'task-2',
+    title: 'Follow-up עם אבי גולן',
+    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: TaskStatus.ToDo,
+    priority: 'Medium',
+    assigneeId: 'user-2',
+    relatedType: 'Contact',
+    relatedId: 'contact-2',
+    notes: 'לשאול לגבי התקדמות תהליך הבדיקה הפנימי.',
+    createdAt: '2023-03-08T16:00:00Z',
+    updatedAt: '2023-03-08T16:00:00Z',
+  },
+];
