@@ -1,8 +1,6 @@
-
 export interface User {
   id: string;
   name: string;
-  email: string;
 }
 
 export interface Contact {
@@ -31,7 +29,7 @@ export enum DealStage {
   Negotiation = 'Negotiation',
   ClosedWon = 'Closed - Won',
   ClosedLost = 'Closed - Lost',
-  OnHold = 'On Hold'
+  OnHold = 'On Hold',
 }
 
 export const DealStageOrder: DealStage[] = [
@@ -52,12 +50,12 @@ export interface Deal {
   amount: number;
   currency: string;
   stage: DealStage;
-  probability: number;
   expectedCloseDate: string;
-  ownerId: string;
   contactIds: string[];
+  ownerId: string;
   priority: 'Low' | 'Medium' | 'High';
   healthScore?: number;
+  probability: number; // 0-100
   createdAt: string;
   updatedAt: string;
 }
@@ -66,23 +64,48 @@ export enum TaskStatus {
   ToDo = 'To Do',
   InProgress = 'In Progress',
   Done = 'Done',
-  Archived = 'Archived',
 }
-
-export type TaskPriority = 'Low' | 'Medium' | 'High';
 
 export interface Task {
   id: string;
   title: string;
   dueDate: string;
   status: TaskStatus;
-  priority: TaskPriority;
+  priority: 'Low' | 'Medium' | 'High';
   assigneeId: string;
   relatedType: 'Deal' | 'Contact';
   relatedId: string;
-  notes: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type View = 'pipeline' | 'deals' | 'tasks' | 'contacts' | 'reports' | 'inbox' | 'settings';
+// New types for Inbox feature
+export interface Inquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  service_interest: string;
+  language: 'he' | 'en';
+  status: 'new' | 'in_progress' | 'done';
+}
+
+export interface GoogleAction {
+  calendar_event: 'yes' | 'no';
+  sheet_log: 'yes' | 'no';
+  create_doc_summary: 'yes' | 'no';
+  share_drive_folder: 'yes' | 'no';
+  notes: string;
+}
+
+export interface AnalysisResult {
+  name: string;
+  potential_score: 'high' | 'medium' | 'low';
+  suggested_status: 'in_progress' | 'done';
+  suggested_category: string;
+  auto_reply: string;
+  human_required: boolean;
+  google_action: GoogleAction;
+}
