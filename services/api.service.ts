@@ -1,10 +1,8 @@
-
-// Fix: Use correct import for GoogleGenAI and Type
 import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult, Inquiry } from "../types";
 
-// Fix: Initialize GoogleGenAI with named apiKey parameter
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+// Initialize GoogleGenAI with a named apiKey parameter.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const analysisSchema = {
   type: Type.OBJECT,
@@ -31,7 +29,7 @@ const analysisSchema = {
 };
 
 export const analyzeInquiry = async (inquiry: Inquiry): Promise<AnalysisResult> => {
-  // Fix: Use recommended model for basic text tasks
+  // Use the recommended 'gemini-2.5-flash' model for basic text tasks.
   const model = "gemini-2.5-flash";
 
   const prompt = `
@@ -64,7 +62,7 @@ export const analyzeInquiry = async (inquiry: Inquiry): Promise<AnalysisResult> 
     `;
 
   try {
-    // Fix: Use correct generateContent method and config for JSON response
+    // Use the correct 'generateContent' method with 'responseMimeType' and 'responseSchema' to ensure a JSON response.
     const response = await ai.models.generateContent({
       model: model,
       contents: prompt,
@@ -74,12 +72,18 @@ export const analyzeInquiry = async (inquiry: Inquiry): Promise<AnalysisResult> 
       },
     });
     
-    // Fix: Correctly access and parse the text response for JSON
+    // Correctly access the 'text' property and parse it as JSON.
     const jsonText = response.text.trim();
+    if (!jsonText) {
+      throw new Error("Received empty response from API");
+    }
     const result = JSON.parse(jsonText);
     return result as AnalysisResult;
   } catch (error) {
     console.error("Error analyzing inquiry with Gemini API:", error);
+    if (error instanceof SyntaxError) {
+        console.error("Failed to parse JSON response from Gemini.");
+    }
     throw new Error("Failed to analyze inquiry. Please check the console for more details.");
   }
 };
