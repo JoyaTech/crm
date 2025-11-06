@@ -1,127 +1,111 @@
 
 import React from 'react';
 import { Inquiry, AnalysisResult } from '../types';
-import { XIcon, SparklesIcon, AlertTriangleIcon, ShieldCheckIcon, CalendarIcon, SheetIcon, FileTextIcon, FolderIcon, CheckCircleIcon } from './Icons';
+import { XIcon, SparklesIcon, CalendarIcon, SheetIcon, FileTextIcon, FolderIcon, AlertTriangleIcon, ShieldCheckIcon, XCircleIcon } from './Icons';
+import { useCRM } from '../contexts/CRMContext';
 
-interface AnalysisModalProps {
-  isOpen: boolean;
+const AnalysisModal: React.FC<{
+  inquiry: Inquiry;
+  analysis: AnalysisResult;
   onClose: () => void;
-  inquiry: Inquiry | null;
-  analysisResult: AnalysisResult | null;
-  isLoading: boolean;
-}
+}> = ({ inquiry, analysis, onClose }) => {
+    const { updateInquiryStatus } = useCRM();
 
-const AnalysisModal: React.FC<AnalysisModalProps> = ({ isOpen, onClose, inquiry, analysisResult, isLoading }) => {
-    if (!isOpen) return null;
+    const handleApplySuggestions = () => {
+        if(analysis.suggested_status) {
+            updateInquiryStatus(inquiry.id, analysis.suggested_status);
+        }
+        onClose();
+    };
+
+    const PotentialScore: React.FC<{ score: 'high' | 'medium' | 'low' }> = ({ score }) => {
+        const scoreMap = {
+            high: { text: "High", color: "text-green-400", Icon: ShieldCheckIcon },
+            medium: { text: "Medium", color: "text-yellow-400", Icon: AlertTriangleIcon },
+            low: { text: "Low", color: "text-red-400", Icon: XCircleIcon },
+        };
+        const { text, color, Icon } = scoreMap[score] || scoreMap.low;
+        return (
+            <div className={`flex items-center gap-2 font-semibold ${color}`}>
+                <Icon className="w-5 h-5" />
+                <span>{text} Potential</span>
+            </div>
+        )
+    };
 
     const ActionItem: React.FC<{ icon: React.ReactNode; text: string; enabled: boolean }> = ({ icon, text, enabled }) => (
-        <div className={`flex items-center gap-3 p-3 rounded-lg ${enabled ? 'bg-slate-700' : 'bg-slate-700/50 text-slate-500'}`}>
+        <div className={`flex items-center gap-3 p-3 rounded-md ${enabled ? 'bg-slate-700 text-slate-200' : 'bg-slate-700/50 text-slate-500'}`}>
             {icon}
-            <span className={enabled ? 'text-slate-200' : ''}>{text}</span>
-            {enabled && <CheckCircleIcon className="w-5 h-5 text-green-400 ml-auto" />}
+            <span>{text}</span>
+            {enabled && <ShieldCheckIcon className="w-4 h-4 ml-auto text-green-500" />}
         </div>
-    );
+    )
 
-    return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center" dir="rtl" onClick={onClose}>
-            <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-4xl border border-slate-700 m-4 flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center p-4 border-b border-slate-700 flex-shrink-0">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <SparklesIcon className="w-6 h-6 text-sky-400" />
-                        <span>ניתוח פנייה עם AI</span>
-                    </h2>
-                    <button type="button" onClick={onClose} className="p-1 rounded-full text-slate-400 hover:bg-slate-700">
-                        <XIcon className="w-6 h-6" />
-                    </button>
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 rounded-lg shadow-2xl border border-slate-700 w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <header className="p-4 border-b border-slate-700 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <SparklesIcon className="w-6 h-6 text-purple-400" />
+            <h2 className="text-xl font-bold text-white">AI Analysis: {inquiry.subject}</h2>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-700">
+            <XIcon className="w-5 h-5 text-slate-400" />
+          </button>
+        </header>
+
+        <main className="p-6 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div>
+                <h3 className="font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Summary & Suggestions</h3>
+                <div className="space-y-4">
+                    <PotentialScore score={analysis.potential_score} />
+                    <div className="bg-slate-700/50 p-3 rounded-md">
+                        <p className="text-sm text-slate-400 mb-1">Suggested Category</p>
+                        <p className="font-medium text-slate-100">{analysis.suggested_category}</p>
+                    </div>
+                     <div className="bg-slate-700/50 p-3 rounded-md">
+                        <p className="text-sm text-slate-400 mb-1">Suggested Status</p>
+                        <p className="font-medium text-slate-100 capitalize">{analysis.suggested_status.replace('_', ' ')}</p>
+                    </div>
+                    <div className="bg-slate-700/50 p-3 rounded-md">
+                        <p className="text-sm text-slate-400 mb-1">Requires Human Follow-up?</p>
+                        <p className={`font-medium ${analysis.human_required ? 'text-green-400' : 'text-yellow-400'}`}>{analysis.human_required ? 'Yes' : 'No'}</p>
+                    </div>
                 </div>
-
-                <div className="flex-grow p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-                    {isLoading ? (
-                        <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                            <SparklesIcon className="w-12 h-12 text-sky-400 animate-pulse" />
-                            <p className="mt-4 text-lg text-slate-300">מנתח את הפנייה... זה עשוי לקחת מספר שניות.</p>
-                        </div>
-                    ) : analysisResult && inquiry ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4">
-                                <div>
-                                    <h3 className="text-lg font-bold text-white mb-2">{inquiry.subject}</h3>
-                                    <div className="space-y-2 text-sm">
-                                        <p><strong className="text-slate-400 font-medium">שם:</strong> <span className="text-slate-200">{inquiry.name}</span></p>
-                                        <p><strong className="text-slate-400 font-medium">אימייל:</strong> <span className="text-slate-200">{inquiry.email}</span></p>
-                                        {inquiry.phone && <p><strong className="text-slate-400 font-medium">טלפון:</strong> <span className="text-slate-200">{inquiry.phone}</span></p>}
-                                        <p><strong className="text-slate-400 font-medium">תחום עניין:</strong> <span className="text-slate-200">{inquiry.service_interest}</span></p>
-                                    </div>
-                                </div>
-                                <div className="mt-4 pt-4 border-t border-slate-700">
-                                    <h4 className="text-base font-semibold text-slate-200 mb-2">תוכן הפנייה:</h4>
-                                    <p className="text-sm text-slate-300 whitespace-pre-wrap bg-slate-800 p-3 rounded-md">{inquiry.message}</p>
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 text-center">
-                                        <h4 className="text-sm font-medium text-slate-400 mb-1">פוטנציאל</h4>
-                                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-base font-bold ${
-                                            analysisResult.potential_score === 'high' ? 'bg-green-500/10 text-green-400' :
-                                            analysisResult.potential_score === 'medium' ? 'bg-yellow-500/10 text-yellow-400' :
-                                            'bg-red-500/10 text-red-400'
-                                        }`}>
-                                            {analysisResult.potential_score === 'high' ? <ShieldCheckIcon className="w-5 h-5"/> : <AlertTriangleIcon className="w-5 h-5"/>}
-                                            <span>{analysisResult.potential_score === 'high' ? 'גבוה' : analysisResult.potential_score === 'medium' ? 'בינוני' : 'נמוך'}</span>
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 text-center">
-                                        <h4 className="text-sm font-medium text-slate-400 mb-1">מעורבות אנושית</h4>
-                                        <p className={`text-base font-bold ${analysisResult.human_required ? 'text-sky-400' : 'text-slate-300'}`}>
-                                            {analysisResult.human_required ? 'נדרשת' : 'לא נדרשת'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                                    <h4 className="font-semibold text-white mb-2">סיכום והמלצות</h4>
-                                    <p className="text-sm text-slate-300">
-                                        קטגוריה מוצעת: <span className="font-bold text-sky-300">{analysisResult.suggested_category}</span><br/>
-                                        סטטוס מוצע: <span className="font-bold text-sky-300">{analysisResult.suggested_status === 'in_progress' ? 'בטיפול' : 'טופל'}</span>
-                                    </p>
-                                </div>
-                                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                                    <h4 className="font-semibold text-white mb-3">תגובה מוצעת ({inquiry.language === 'he' ? 'עברית' : 'אנגלית'})</h4>
-                                    <div className="bg-slate-800 p-3 rounded text-sm whitespace-pre-wrap max-h-40 overflow-y-auto">{analysisResult.auto_reply}</div>
-                                </div>
-                                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                                    <h4 className="font-semibold text-white mb-3">פעולות Google מוצעות</h4>
-                                    <div className="space-y-2">
-                                        <ActionItem icon={<CalendarIcon className="w-5 h-5 text-sky-400"/>} text="צור אירוע ביומן" enabled={analysisResult.google_action.calendar_event === 'yes'} />
-                                        <ActionItem icon={<SheetIcon className="w-5 h-5 text-green-400"/>} text="תעד ב-Google Sheet" enabled={analysisResult.google_action.sheet_log === 'yes'} />
-                                        <ActionItem icon={<FileTextIcon className="w-5 h-5 text-blue-400"/>} text="צור מסמך סיכום" enabled={analysisResult.google_action.create_doc_summary === 'yes'} />
-                                        <ActionItem icon={<FolderIcon className="w-5 h-5 text-yellow-400"/>} text="שתף תיקייה ב-Drive" enabled={analysisResult.google_action.share_drive_folder === 'yes'} />
-                                    </div>
-                                    <h5 className="font-semibold text-slate-300 mt-4 mb-2 text-sm">הערות לצוות:</h5>
-                                    <p className="text-sm text-slate-400 bg-slate-800 p-2 rounded">{analysisResult.google_action.notes}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                            <AlertTriangleIcon className="w-12 h-12 text-red-400" />
-                            <p className="mt-4 text-lg text-slate-300">אירעה שגיאה בניתוח הפנייה.</p>
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex-shrink-0 flex justify-end items-center p-4 bg-slate-800/50 border-t border-slate-700 rounded-b-xl gap-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 rounded-md bg-slate-600 text-white hover:bg-slate-500 transition-colors">
-                        סגור
-                    </button>
-                    <button type="button" disabled={isLoading || !analysisResult} className="px-4 py-2 rounded-md bg-sky-600 text-white hover:bg-sky-700 transition-colors font-semibold disabled:bg-slate-500 disabled:cursor-not-allowed">
-                        בצע פעולות
-                    </button>
+                <h3 className="font-semibold text-slate-300 my-4 border-b border-slate-700 pb-2">Suggested Reply</h3>
+                <div className="bg-slate-900 p-4 rounded-md text-slate-300 text-sm whitespace-pre-wrap font-mono">
+                    {analysis.auto_reply}
                 </div>
             </div>
-        </div>
-    );
+            
+            {/* Right Column */}
+            <div>
+                 <h3 className="font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Google Workspace Actions</h3>
+                 <div className="space-y-3">
+                    <ActionItem icon={<CalendarIcon className="w-5 h-5"/>} text="Create Calendar Event" enabled={analysis.google_action.calendar_event === 'yes'} />
+                    <ActionItem icon={<SheetIcon className="w-5 h-5"/>} text="Log in Google Sheet" enabled={analysis.google_action.sheet_log === 'yes'} />
+                    <ActionItem icon={<FileTextIcon className="w-5 h-5"/>} text="Create Doc Summary" enabled={analysis.google_action.create_doc_summary === 'yes'} />
+                    <ActionItem icon={<FolderIcon className="w-5 h-5"/>} text="Share Drive Folder" enabled={analysis.google_action.share_drive_folder === 'yes'} />
+                 </div>
+                 <h3 className="font-semibold text-slate-300 my-4 border-b border-slate-700 pb-2">Notes for Team</h3>
+                 <div className="bg-slate-700/50 p-3 rounded-md text-slate-300 text-sm">
+                    {analysis.google_action.notes}
+                 </div>
+            </div>
+        </main>
+        
+        <footer className="p-4 border-t border-slate-700 flex justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 bg-slate-700 text-slate-200 rounded-md hover:bg-slate-600">
+            Close
+          </button>
+          <button onClick={handleApplySuggestions} className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-500">
+            Apply Suggestions
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
 };
 
 export default AnalysisModal;
